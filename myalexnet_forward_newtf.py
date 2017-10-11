@@ -13,6 +13,8 @@
 
 from numpy import *
 import os
+import PIL
+import random
 #from pylab import *
 import numpy as np
 #import matplotlib.pyplot as plt
@@ -24,6 +26,7 @@ import matplotlib.image as mpimg
 from scipy.ndimage import filters
 import urllib
 from numpy import random
+import shutil
 
 
 import tensorflow as tf
@@ -40,13 +43,28 @@ ydim = train_y.shape[1]
 ################################################################################
 #Read Image, and change to BGR
 
+# choices=np.array(random.choice(os.listdir("../Network_Compression/ALL_images"),500),dtype=object)
+# for i in range(len(choices)):
+#   choices[i]=os.path.join("ALL_images",choices[i])
+# for choice in choices:
+#   shutil.copy(choice,"random_dataset")
 
-im1 = (imread("laska.png")[:,:,:3]).astype(float32)
-im1 = im1 - mean(im1)
-im1[:, :, 0], im1[:, :, 2] = im1[:, :, 2], im1[:, :, 0]
+im_path="random_dataset"
 
-im2 = (imread("poodle.png")[:,:,:3]).astype(float32)
-im2[:, :, 0], im2[:, :, 2] = im2[:, :, 2], im2[:, :, 0]
+image_list=[]
+for choice in np.array(os.listdir(im_path),dtype=object):
+  im = np.asarray(PIL.Image.open(im_path+"/"+choice))
+
+
+
+  im=imresize(im,(227,227,3),interp='bilinear')       
+
+
+  im=(im[:,:,:3]).astype(float32)
+  im = im - mean(im)
+  im[:, :, 0], im[:, :, 2] = im[:, :, 2], im[:, :, 0]
+  image_list.append(im)
+
 
 
 ################################################################################
@@ -197,7 +215,7 @@ sess = tf.Session()
 sess.run(init)
 
 t = time.time()
-output = sess.run(prob, feed_dict = {x:[im1,im2]})
+output = sess.run(prob, feed_dict = {x:np.array(image_list[:2])})
 ################################################################################
 
 #Output:
@@ -206,7 +224,7 @@ output = sess.run(prob, feed_dict = {x:[im1,im2]})
 for input_im_ind in range(output.shape[0]):
     inds = argsort(output)[input_im_ind,:]
     print("Image", input_im_ind)
-    for i in range(5):
+    for i in range(1):
         print(class_names[inds[-1-i]], output[input_im_ind, inds[-1-i]])
 
 print(time.time()-t)
